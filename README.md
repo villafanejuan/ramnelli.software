@@ -28,9 +28,9 @@ La página está optimizada para performance, SEO y garantiza una experiencia de
 El formulario de contacto (`#contactoForm`) utiliza la librería **EmailJS** para el envío de datos. Para que funcione correctamente en cualquier entorno (incluyendo producción), debes verificar las siguientes claves en el script al final del `index.html`:
 
 ```javascript
-const EMAILJS_SERVICE_ID = 'service_t3gvptn'; // Tu ID de Servicio
-const EMAILJS_TEMPLATE_ID = 'template_e8gg0uj'; // Tu ID de Plantilla
-const EMAILJS_PUBLIC_KEY = 'dm0J95G2M5g_gN5U1'; // Tu Public Key (User ID)
+const EMAILJS_SERVICE_ID = 'TU_ID_SERVICE'; // Tu ID de Servicio
+const EMAILJS_TEMPLATE_ID = 'EMAILJS_TEMPLATE_ID; // Tu ID de Plantilla
+const EMAILJS_PUBLIC_KEY = 'EMAILJS_PUBLIC_KEY'; // Tu Public Key (User ID)
 ```
 Asegurar la Recepción en Gmail
 Si los correos llegan a la carpeta de Promociones o Spam, sigue estos pasos en tu cuenta de Gmail:
