@@ -29,8 +29,8 @@ El formulario de contacto (`#contactoForm`) utiliza la librería **EmailJS** par
 
 ```javascript
 const EMAILJS_SERVICE_ID = 'TU_ID_SERVICE'; // Tu ID de Servicio
-const EMAILJS_TEMPLATE_ID = 'EMAILJS_TEMPLATE_ID; // Tu ID de Plantilla
-const EMAILJS_PUBLIC_KEY = 'EMAILJS_PUBLIC_KEY'; // Tu Public Key (User ID)
+const EMAILJS_TEMPLATE_ID = 'TU_EMAILJS_TEMPLATE_ID'; // Tu ID de Plantilla
+const EMAILJS_PUBLIC_KEY = 'TU_EMAILJS_PUBLIC_KEY'; // Tu Public Key (User ID)
 ```
 Asegurar la Recepción en Gmail
 Si los correos llegan a la carpeta de Promociones o Spam, sigue estos pasos en tu cuenta de Gmail:
