@@ -67,6 +67,5 @@ Para cualquier pregunta o sugerencia sobre el código:
 
 Email: ramnelli.software@gmail.com
 
-Website: https://ramnelli.software/
 
 © Ramnelli Software. Todos los derechos reservados.
