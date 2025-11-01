@@ -385,77 +385,117 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-    <script>
-        // 🚨 Asegurate que estas claves son las correctas de tu cuenta EmailJS 🚨
-        const EMAILJS_SERVICE_ID = 'service_t3gvptn'; // Tu ID de Servicio
-        const EMAILJS_TEMPLATE_ID = 'template_e8gg0uj'; // Tu ID de Plantilla
-        const EMAILJS_PUBLIC_KEY = 'dm0J95G2M5g_gN5U1'; // Tu Public Key (User ID)
+<script>
+    // 🚨 Asegurate que estas claves son las correctas de tu cuenta EmailJS 🚨
+    const EMAILJS_SERVICE_ID = 'service_t3gvptn'; // Tu ID de Servicio
+    const EMAILJS_TEMPLATE_ID = 'template_e8gg0uj'; // Tu ID de Plantilla
+    const EMAILJS_PUBLIC_KEY = 'dm0J95G2M5g_gN5U1'; // Tu Public Key (User ID)
 
-        (function(){ emailjs.init(EMAILJS_PUBLIC_KEY); })();
+    // --- NUEVA CONFIGURACIÓN ANTI-SPAM ---
+    const COOLDOWN_SECONDS = 3600; // Tiempo de espera MÍNIMO entre envíos exitosos
+    const LAST_SENT_KEY = 'ramnelli_last_sent'; // Clave para localStorage
 
-        const form = document.getElementById('contactoForm');
-        const btnEnviar = document.getElementById('btnEnviar');
-        const msg = document.getElementById('formMsg');
+    (function(){ emailjs.init(EMAILJS_PUBLIC_KEY); })();
 
-        // Función para cambiar el texto y estilo del botón
-        function updateButton(text, disable, classes) {
-            btnEnviar.disabled = disable;
-            btnEnviar.textContent = text;
-            if (disable) {
-                btnEnviar.classList.add('opacity-60', 'cursor-not-allowed');
-            } else {
-                btnEnviar.classList.remove('opacity-60', 'cursor-not-allowed');
+    const form = document.getElementById('contactoForm');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const msg = document.getElementById('formMsg');
+
+    // REGEX BÁSICO DE VALIDACIÓN DE EMAIL
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Función para cambiar el texto y estilo del botón
+    function updateButton(text, disable) {
+        btnEnviar.disabled = disable;
+        btnEnviar.textContent = text;
+        if (disable) {
+            btnEnviar.classList.add('opacity-60', 'cursor-not-allowed');
+            btnEnviar.classList.remove('hover:bg-brand-secondary');
+        } else {
+            btnEnviar.classList.remove('opacity-60', 'cursor-not-allowed');
+            btnEnviar.classList.add('hover:bg-brand-secondary');
+        }
+    }
+
+    // Función para mostrar el mensaje de estado
+    function updateMessage(text, isError = false) {
+        msg.textContent = text;
+        msg.className = isError ? 'text-xs text-rose-400 mt-1' : 'text-xs text-emerald-400 mt-1';
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. **[ANTI-SPAM] Honeypot**:
+        if (form.website && form.website.value.trim() !== '') {
+            console.warn('Posible intento de spam detectado (honeypot).');
+            updateMessage('✨ Gracias, tu mensaje fue enviado. ¡Te contactamos pronto!');
+            form.reset();
+            return;
+        }
+        
+        // 2. **[ANTI-SPAM] Cooldown / Throttling (NUEVO)**:
+        const lastSentTimestamp = localStorage.getItem(LAST_SENT_KEY);
+        const now = Date.now();
+        
+        if (lastSentTimestamp) {
+            const timeElapsed = (now - parseInt(lastSentTimestamp)) / 1000; // Segundos
+            
+            if (timeElapsed < COOLDOWN_SECONDS) {
+                const timeLeft = Math.ceil(COOLDOWN_SECONDS - timeElapsed);
+                updateMessage(`⏳ Esperá ${timeLeft} segundos antes de enviar otro mensaje.`, true);
+                return; // Detiene el envío
             }
         }
-
-        // Función para mostrar el mensaje de estado
-        function updateMessage(text, isError = false) {
-            msg.textContent = text;
-            msg.className = isError ? 'text-xs text-rose-400 mt-1' : 'text-xs text-emerald-400 mt-1';
+        
+        // 3. **[VALIDACIÓN] Revisa todos los campos con 'required'**:
+        if (!form.checkValidity()) {
+             updateMessage('⚠️ Por favor, completá todos los campos requeridos.', true);
+             return;
         }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            // Validación Honeypot (Anti-spam)
-            if (form.website && form.website.value.trim() !== '') {
-                console.warn('Posible intento de spam detectado (honeypot).');
+        // 4. **[VALIDACIÓN] Formato de Email**:
+        if (!emailRegex.test(form.email.value.trim())) {
+            updateMessage('⚠️ Por favor, ingresá un formato de Email válido. (ej: tu@correo.com)', true);
+            return;
+        }
+        
+        // 5. **[VALIDACIÓN] Longitud Mínima del Mensaje (Evita envíos vacíos)**:
+        if (form.mensaje.value.trim().length < 15) {
+            updateMessage('⚠️ El mensaje es demasiado corto. Por favor, sé más descriptivo (mínimo 15 caracteres).', true);
+            return;
+        }
+        
+        // --- PROCESO DE ENVÍO SEGURO ---
+
+        updateButton('Enviando…', true);
+        updateMessage('Procesando tu solicitud...');
+
+        try {
+            const res = await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, form);
+
+            if (res.status === 200) {
+                // Éxito: Guarda el timestamp en localStorage
+                localStorage.setItem(LAST_SENT_KEY, Date.now().toString()); 
+                
                 updateMessage('✨ Gracias, tu mensaje fue enviado. ¡Te contactamos pronto!');
-                form.reset();
-                return; // Detiene el envío real de EmailJS
+                form.reset(); // Limpia el formulario
+            } else {
+                throw new Error(`Error en el servicio: ${res.text}`);
             }
-
-            // Validación básica del formulario (adicional al 'required' en HTML)
-            if (!form.nombre.value || !form.email.value || !form.mensaje.value || form.tipo_proyecto.value === "") {
-                updateMessage('⚠️ Por favor, completá todos los campos requeridos.', true);
-                return;
+        } catch (err) {
+            console.error('Error al enviar el formulario con EmailJS:', err);
+            const errorMsg = err.message || 'Hubo un error al enviar. Intentá de nuevo o escribinos a ramnelli.software@gmail.com';
+            updateMessage(`💔 ${errorMsg}`, true);
+        } finally {
+            // Restaura el botón
+            if (msg.className.includes('text-emerald-400')) {
+                 setTimeout(() => updateButton('Enviar consulta', false), 3000); 
+            } else {
+                 updateButton('Enviar consulta', false);
             }
-
-
-            updateButton('Enviando…', true);
-            updateMessage('Procesando tu solicitud...');
-
-
-            try {
-                // EmailJS envía un objeto de datos (templateParams) que es construido a partir del formulario
-                const res = await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, form);
-
-                if (res.status === 200) {
-                    // Éxito al enviar. EmailJS manda una copia al destinatario configurado (tu GMAIL)
-                    updateMessage('✨ Gracias, tu mensaje fue enviado. ¡Te contactamos pronto!');
-                    form.reset(); // Limpia el formulario
-                } else {
-                    throw new Error(`Error en el servicio: ${res.text}`);
-                }
-            } catch (err) {
-                console.error('Error al enviar el formulario con EmailJS:', err);
-                // Si el error es de tipo 'emailjs_exception', intenta mostrar un mensaje más específico
-                const errorMsg = err.message || 'Hubo un error al enviar. Intentá de nuevo o escribinos a ramnelli.software@gmail.com';
-                updateMessage(`💔 ${errorMsg}`, true);
-            } finally {
-                // Restaura el botón
-                updateButton('Enviar consulta', false);
-            }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>
